@@ -123,7 +123,7 @@ hdmi( .clk_pixel_x5(pxlClk5x),
 
 // Create the image.
 logic newFrameInDel, newFrameProcessed;
-logic [2:0] lineCntScale, pxlCntScale, pxlCntScaleDel, pxlCntScaleDel2;
+logic [2:0] lineCntScale, pxlCntScale, gridXCnt;
 logic drawGBA;
 logic [7:0] redPxlGBA, greenPxlGBA, bluePxlGBA;
 logic [7:0] pxlCntRead;
@@ -140,7 +140,7 @@ logic brightGrid;
 localparam int gbaVideoXStart = ( FRAMEWIDTH - ( maxScaleCnt + 1 ) * 240 ) / 2;
 localparam int gbaVideoYStart = ( FRAMEHEIGHT - ( maxScaleCnt + 1 ) * 160 ) / 2;
 
-always_comb
+always_ff @( posedge pxlClk )
 begin
   if ( cx >= gbaVideoXStart && cx < ( gbaVideoXStart + ( maxScaleCnt + 1 ) * 240 ) &&
        cy >= gbaVideoYStart && cy < ( gbaVideoYStart + ( maxScaleCnt + 1 ) * 160 ) )
@@ -165,10 +165,9 @@ begin
   end else begin
     cacheUpdate <= 0;
   end
-
-  rgb <= { redPxl, greenPxl, bluePxl };
 end
 
+assign rgb = { redPxl, greenPxl, bluePxl };
 assign curPxl = pxlCntRead;
 
 always_ff @( posedge pxlClk )
@@ -216,8 +215,18 @@ begin
       setStart <= 0;
       newFrameProcessed <= 1;
     end
+
+    if ( cx == gbaVideoXStart || gridXCnt == maxScaleCnt )
+      gridXCnt <= 0;
+    else begin
+      gridXCnt <= gridXCnt + 1;
+    end
     
-    if ( drawGBA == 0 )
+    // FIXME: magic constant 3 gets pixel transitions from lineCache to
+    // coincide with desired HDMI output, would be good to derive from cycle
+    // timings in a more principled way
+    if ( cx <= gbaVideoXStart - 3 ||
+         cx > gbaVideoXStart - 3 + ( maxScaleCnt + 1 ) * 240 )
     begin
       pxlCntScale <= 2'(0);
       pxlCntRead <= 8'(0);
@@ -280,15 +289,8 @@ begin
 end
 
 
-always_ff @( posedge pxlClk )
-begin
-  // Delay the pxlCntScale twice.
-  pxlCntScaleDel <= pxlCntScale;
-  pxlCntScaleDel2 <= pxlCntScaleDel;
-end
-
 // Pixel grid.
-assign gridAct = ( pxlCntScaleDel2 == 0 || lineCntScale == 0 ? 1 : 0 );
+assign gridAct = ( gridXCnt == 0 || lineCntScale == 0 );
 
 gridGen #( .gridLineChange( 8'b00011101 ) )
 gridGen ( .pxlInRed( redPxlGBA ),
