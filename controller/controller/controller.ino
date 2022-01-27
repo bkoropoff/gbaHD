@@ -74,7 +74,7 @@ void readController() {
       uint8_t curDat = !digitalRead( SNESSERIAL );
       switch ( i ) {
         case 0:
-          conB |= curDat;
+          conA |= curDat;
           break;
         case 1:
           conB |= curDat;
@@ -101,7 +101,7 @@ void readController() {
           conA |= curDat;
           break;
         case 9:
-          conA |= curDat;
+          conB |= curDat;
           break;
         case 10:
           conL = curDat;

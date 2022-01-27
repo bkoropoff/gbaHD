@@ -1,0 +1,20 @@
+files = [
+    "borderGen.vhd",
+    "captureGBA.vhd",
+    "commTransceiver.vhd",
+    "definePackage.sv",
+    "drp.vhd",
+    "font5x7.vhd",
+    "fracDiv.vhd",
+    "gbaShaderApprox.vhd",
+    "gridGen.vhd",
+    "imageGen.sv",
+    "lineBuffer.vhd",
+    "lineCache.vhd",
+    "osd.vhd",
+    "pwm2pcm.vhd",
+    "singeLineBuffer.vhd",
+    "smooth.vhd",
+    "topUnit.sv",
+    "pins.xdc"
+]
